@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:migraine_app/tabs/calendar.dart';
+import 'package:migraine_app/tabs/graphic.dart';
+
+import '../tabs/user.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -12,7 +15,8 @@ class _HomeState extends State<Home> {
 
   List tabs = <Widget> [
     Calendar(),
-    Text("Nodine")
+    Graphic(),
+    Setting()
   ];
   int current_index = 0;
   late Widget CurrentScreen = tabs[current_index];
@@ -33,8 +37,13 @@ class _HomeState extends State<Home> {
               backgroundColor: Colors.green
           ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Other Home",
+              icon: Icon(Icons.graphic_eq),
+              label: "Graphs",
+              backgroundColor: Colors.green
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: "User",
               backgroundColor: Colors.green
           ),
         ],

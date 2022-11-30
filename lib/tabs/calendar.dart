@@ -1,8 +1,10 @@
 import 'dart:collection';
+import "package:collection/collection.dart";
 
 import 'package:flutter/material.dart';
-import 'package:migraine_app/services/utils.dart';
+import 'package:migraine_app/services/Event.dart';
 import 'package:table_calendar/table_calendar.dart';
+
 
 class Calendar extends StatefulWidget {
   @override
@@ -10,37 +12,41 @@ class Calendar extends StatefulWidget {
 }
 
 class _CalendarState extends State<Calendar> {
-  late final ValueNotifier<List<Event>> _selectedEvents;
+  List<Event> _selectedEvents = [];
   CalendarFormat _calendarFormat = CalendarFormat.month;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
-      .toggledOff; // Can be toggled on/off by longpressing a date
+      .toggledOff;
   DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  DateTime? _selectedDay = DateTime.now() ;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
+  LinkedHashMap<DateTime, List<Event>> groups = LinkedHashMap();
+  List<Event> events = [];
+
+  void getEvents() async {
+    List<Event> all_events =  await EventHelper.instance.getEvents();
+    initData(all_events);
+  }
+
+  List<Event> _getEventsForDay(DateTime? day) {
+    return groups[day] ?? [];
+  }
+
+  void initData(List<Event> all_events){
+    setState((){
+      events = all_events;
+      groups = (events.isNotEmpty ? groupBy(events, (data) =>  DateTime.parse("${data.start_date.split(" ")[0]} 00:00:00.000Z")): <DateTime, List<Event>>{}) as LinkedHashMap<DateTime, List<Event>>;
+      _selectedEvents = _getEventsForDay(DateTime.parse("${_selectedDay.toString().split(" ")[0]} 00:00:00.000Z"));
+    });
+  }
 
   @override
-  void initState() {
+  void initState(){
     super.initState();
-
-    _selectedDay = DateTime.parse("2022-11-06 00:00:00.000Z");
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-  }
-
-  @override
-  void dispose() {
-    _selectedEvents.dispose();
-    super.dispose();
-  }
-
-  List<Event> _getEventsForDay(DateTime day) {
-    // Implementation example
-    LinkedHashMap<DateTime, List<Event>> events  = {DateTime.parse("2022-11-06 00:00:00.000Z") : [Event("event 1")]} as LinkedHashMap<DateTime, List<Event>>;
-    return events[day] ?? [];
+    getEvents();
   }
 
   List<Event> _getEventsForRange(DateTime start, DateTime end) {
-    // Implementation example
     final days = daysInRange(start, end);
     return [
       for (final d in days) ..._getEventsForDay(d),
@@ -56,8 +62,7 @@ class _CalendarState extends State<Calendar> {
         _rangeEnd = null;
         _rangeSelectionMode = RangeSelectionMode.toggledOff;
       });
-
-      _selectedEvents.value = _getEventsForDay(selectedDay);
+      _selectedEvents = _getEventsForDay(selectedDay);
     }
   }
 
@@ -70,16 +75,17 @@ class _CalendarState extends State<Calendar> {
       _rangeSelectionMode = RangeSelectionMode.toggledOn;
     });
     if (start != null && end != null) {
-      _selectedEvents.value = _getEventsForRange(start, end);
+      _selectedEvents = _getEventsForRange(start, end);
     } else if (start != null) {
-      _selectedEvents.value = _getEventsForDay(start);
+      _selectedEvents = _getEventsForDay(start);
     } else if (end != null) {
-      _selectedEvents.value = _getEventsForDay(end);
+      _selectedEvents = _getEventsForDay(end);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    getEvents();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -90,7 +96,7 @@ class _CalendarState extends State<Calendar> {
               onPressed: () {
                 Navigator.pushNamed(context, "/add");
               },
-              child: Text("Add +"),
+              child: const Text("Add +"),
             ),
           ),
           TableCalendar<Event>(
@@ -104,7 +110,7 @@ class _CalendarState extends State<Calendar> {
             rangeSelectionMode: _rangeSelectionMode,
             eventLoader: _getEventsForDay,
             startingDayOfWeek: StartingDayOfWeek.monday,
-            calendarStyle: CalendarStyle(
+            calendarStyle: const CalendarStyle(
               // Use `CalendarStyle` to customize the UI
               outsideDaysVisible: false,
             ),
@@ -123,11 +129,8 @@ class _CalendarState extends State<Calendar> {
           ),
           const SizedBox(height: 8.0),
           Expanded(
-            child: ValueListenableBuilder<List<Event>>(
-              valueListenable: _selectedEvents,
-              builder: (context, value, _) {
-                return ListView.builder(
-                  itemCount: value.length,
+            child: ListView.builder(
+                  itemCount: _selectedEvents.length,
                   itemBuilder: (context, index) {
                     return Card(
                       margin: const EdgeInsets.symmetric(
@@ -138,17 +141,22 @@ class _CalendarState extends State<Calendar> {
                       shadowColor: Colors.black,
                       elevation: 15,
                       child: ListTile(
-                        onTap: () => print('${value[index]}'),
-                        title: Text('${index + 1}. ${value[index]}',style: TextStyle(
-                          color: Colors.white
-                        ),),
+                        onTap: () {
+                          Event event = _selectedEvents[index];
+                          Navigator.pushNamed(context, "/add", arguments: event);
+                        },
+                        onLongPress: (){
+                          Event event = _selectedEvents[index];
+                          EventHelper.instance.deleteEvent(event.id!);
+                        },
+                        title: Text('${index + 1}. ${_selectedEvents[index]}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     );
                   },
-                );
-              },
+                ),
             ),
-          ),
         ],
       );
   }
