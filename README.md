@@ -1,16 +1,10 @@
-# migraine_app
+# Migraine App
+## Overview
+The Migraine App is a mobile application designed to help users track the occurrence of migraines, log symptoms, and analyze patterns to better understand and manage their migraine episodes. This app serves as a comprehensive tool for individuals suffering from migraines, providing insights into triggers and frequency.
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Features
+- Migraine Tracking: Record the date, time, and duration of each migraine episode.
+- Symptom Log: Document associated symptoms, pain intensity, and any potential triggers.
+- Visual Analytics: View graphical representations of migraine patterns, triggers, and frequency.
+- Personalized Insights(Future feature): Receive insights into potential triggers and patterns based on recorded data.
+- Medication Tracking: Log medications taken during migraines for better management.
